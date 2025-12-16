@@ -16,8 +16,8 @@ clean:
 
 # 4. Run the Training (Baseline)
 train-mcq:
-	python src/train.py --config configs/mcq_baseline.yaml
+	python -m src.train --config configs/mcq_baseline.yaml
 
 # 5. Run the Prediction
 predict-mcq:
-	python src/predict.py --task mcq --checkpoint artifacts/latest_model
+	python -m src.predict --task mcq --checkpoint artifacts/latest_model

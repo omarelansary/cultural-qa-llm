@@ -1,0 +1,19 @@
+# Model Configuration
+model_name: "meta-llama/Meta-Llama-3-8B"
+quantization: "4bit"  # Options: 4bit, 8bit, none
+
+# Data Paths
+train_data_path: "data/train_mcq.tsv"
+output_dir: "output/mcq_baseline"
+
+# Training Hyperparameters
+batch_size: 4
+learning_rate: 2.0e-5
+num_epochs: 3
+max_length: 512
+gradient_accumulation_steps: 4
+
+# Logging
+logging_steps: 10
+save_steps: 100
+seed: 42

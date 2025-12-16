@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "llama_cultural_qa"
+name = "venv"
 version = "0.1.0"
 description = "Cultural Question Answering using Llama 3-8B"
 readme = "README.md"
@@ -13,16 +13,18 @@ authors = [
     {name = "Hussam Chihadeh"}
 ]
 dependencies = [
-    "torch>=2.1.0",
-    "transformers>=4.40.0",
     "accelerate>=0.29.0",
     "bitsandbytes>=0.43.0",
-    "peft>=0.10.0",
+    "huggingface-hub",
     "pandas",
+    "peft>=0.10.0",
     "python-dotenv",
-    "wandb",
+    "pyyaml",
     "scikit-learn",
-    "tqdm"
+    "torch>=2.1.0",
+    "tqdm",
+    "transformers>=4.40.0",
+    "wandb"
 ]
 
 [tool.setuptools.packages.find]

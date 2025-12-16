@@ -3,6 +3,9 @@ This project explores LLM-based approaches to cultural question answering using 
 We address both multiple-choice (MCQ) and short-answer (SAQ) tasks as defined in the Codabench benchmark, investigating techniques such as prompt engineering, parameter-efficient fine-tuning, self-consistency, and retrieval-augmented reasoning—while strictly adhering to the constraint of using Llama-3-8B as the sole language model.  
 Model performance is evaluated using benchmark accuracy, with particular attention to generalization across cultures and the limitations of exact-match evaluation for generative answers.
 
+## Project Pipeline
+
+![Project Pipeline](media/images/pipeline-diagram.png)
 
 ## Directory Structure & Guide
 
@@ -36,3 +39,24 @@ Model performance is evaluated using benchmark accuracy, with particular attenti
    bash
    sbatch scripts/train_mcq.slurm
    ```
+
+## Dependency Management (HPC-friendly)
+
+- **Add a new library** (updates `pyproject.toml` + `requirements.txt`, optional install):
+  ```bash
+  python scripts/manage_deps.py add "package==1.2.3" --pip-install
+  ```
+- **Remove a library** (updates both files, optional uninstall):
+  ```bash
+  python scripts/manage_deps.py remove package-name --pip-uninstall
+  ```
+- **Freeze requirements** (regenerate `requirements.txt` from `pyproject.toml`):
+  ```bash
+  python scripts/manage_deps.py freeze
+  ```
+  Use this after any manual edit to `pyproject.toml` or before pushing so CI/HPC installs match.
+- **Setup env on HPC** (loads modules, freezes, installs editable):
+  ```bash
+  bash scripts/setup_env.sh
+  ```
+  This runs `manage_deps.py freeze` first to keep `requirements.txt` in sync, then `pip install -e .` and installs the generated requirements inside your conda env.

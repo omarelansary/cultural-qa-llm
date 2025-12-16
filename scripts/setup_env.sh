@@ -18,5 +18,9 @@ if torch.cuda.is_available():
     print("device 0:", torch.cuda.get_device_name(0))
 EOF
 
+# Keep requirements.txt in sync with pyproject.toml
+python scripts/manage_deps.py freeze
+
 # Install dependencies
+pip install -e .
 pip install -r requirements.txt
