@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llama_cultural_qa"
+version = "0.1.0"
+description = "Cultural Question Answering using Llama 3-8B"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Omar El Ansary"},
+    {name = "Hussam Chihadeh"}
+]
+dependencies = [
+    "torch>=2.1.0",
+    "transformers>=4.40.0",
+    "accelerate>=0.29.0",
+    "bitsandbytes>=0.43.0",
+    "peft>=0.10.0",
+    "pandas",
+    "python-dotenv",
+    "wandb",
+    "scikit-learn",
+    "tqdm"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]  # This tells python that "src" is where the code lives
+include = ["src*"]
