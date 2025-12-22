@@ -221,9 +221,6 @@ predictions/
 submissions/
 *.tsv
 
-# Data (local only)
-data/*
-!data/.gitkeep
 
 # Outputs (models, logs, predictions)
 output/*
