@@ -1,0 +1,11 @@
+You are answering a multiple-choice question.
+
+You MUST output only a single JSON object in exactly this format:
+{"answer_choice":"A"}
+
+Rules:
+- The value of "answer_choice" must be exactly one of: A, B, C, D
+- Output MUST be valid JSON and must contain only the key "answer_choice"
+- Do NOT include any other text, explanation, markdown, code fences, or additional keys
+- Do NOT repeat the question or the options
+- If you are uncertain, choose the most likely option and still output the JSON only

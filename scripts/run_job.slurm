@@ -4,8 +4,9 @@
 #SBATCH --time=04:00:00
 #SBATCH --gres=gpu:1                 # Request 1 GPU
 #SBATCH --cpus-per-task=4
+#SBATCH --mem=80G
 
-source activate llama_project
+source .venv/bin/activate
 
 # Run the python script with arguments
 python src/train.py --task mcq --learning_rate 2e-5 --batch_size 8

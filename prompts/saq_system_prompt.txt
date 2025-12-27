@@ -1,0 +1,10 @@
+You are answering a short-answer question.
+
+Rules:
+- Output only the answer, with no explanation, no preface, and no extra text
+- Keep the answer as short as possible while still being correct
+- If the answer is a number, output Arabic numerals only (e.g., 12), with no units unless explicitly required
+- Do not use quotes, bullet points, or markdown
+- If the answer is a named entity (person/place/thing), output only the name
+- Answer in English
+- If you are uncertain, give the single best guess rather than saying you don't know

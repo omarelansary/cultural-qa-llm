@@ -6,8 +6,12 @@ module load GCCcore/13.2.0
 module load bzip2/1.0.8
 
 # Create env only if it doesn't exist
-conda create -n llama_project python=3.10 -y
-source activate llama_project
+if [ ! -d ".venv" ]; then
+    echo "Creating virtual environment..."
+    python -m venv .venv
+fi
+source .venv/bin/activate
+python -m pip install --upgrade pip
 
 echo "=== torch CUDA check ==="
 python - << 'EOF'
