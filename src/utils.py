@@ -31,7 +31,7 @@ def save_mcq_submission(ids, predictions, filename="output/mcq_prediction.tsv", 
 
 
 def validate_saq_submission(path: str):
-    df = pd.read_csv(path, sep="\t", engine="python")
+    df = pd.read_csv(path, sep="\t", engine="python", keep_default_na=False, na_filter=False)
     expected = ["ID", "answer"]
     if list(df.columns) != expected:
         raise ValueError(f"[SAQ FORMAT] Expected {expected}, got {list(df.columns)}")

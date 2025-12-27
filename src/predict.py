@@ -222,7 +222,8 @@ def main():
         validate_mcq_submission(args.output_file, expected_id_col="MCQID")
     
     else:
-        # SAQ logic (Save directly)
+        # SAQ logic, Allow empty answers, Save directly, and validate for submission format
+        predictions = [("" if p is None or (isinstance(p, float) and pd.isna(p)) else str(p)) for p in predictions]
         out_df = pd.DataFrame({'ID': ids, 'answer': predictions})
         out_df.to_csv(args.output_file, sep='\t', index=False, columns=["ID", "answer"], lineterminator="\n")
         validate_saq_submission(args.output_file)
