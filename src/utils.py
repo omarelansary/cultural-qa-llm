@@ -31,15 +31,47 @@ def save_mcq_submission(ids, predictions, filename="output/mcq_prediction.tsv", 
 
 
 def validate_saq_submission(path: str):
-    df = pd.read_csv(path, sep="\t", engine="python", keep_default_na=False, na_filter=False)
-    expected = ["ID", "answer"]
-    if list(df.columns) != expected:
-        raise ValueError(f"[SAQ FORMAT] Expected {expected}, got {list(df.columns)}")
-    if (df["ID"].astype(str).str.strip() == "").any():
-        raise ValueError("[SAQ FORMAT] Missing ID values")
-    if df["answer"].isna().any():
-        raise ValueError("[SAQ FORMAT] NaN answers present (empty string ok, NaN not)")
+    """
+    Validates SAQ submission file for structure, empty values, and formatting corruption.
+    """
+    try:
+        # Load as string to check formatting strictly
+        df = pd.read_csv(path, sep="\t", engine="python", dtype=str, keep_default_na=False)
+    except Exception as e:
+        raise ValueError(f"[SAQ FORMAT] Could not read file. Check separators/encoding. Error: {e}")
 
+    expected = ["ID", "answer"]
+    
+    # 1. Column Check
+    if list(df.columns) != expected:
+        raise ValueError(f"[SAQ FORMAT] Expected columns {expected}, got {list(df.columns)}")
+
+    # 2. Missing IDs
+    if (df["ID"].str.strip() == "").any():
+        raise ValueError("[SAQ FORMAT] Found rows with missing ID values.")
+
+    # 3. TSV Corruption Check (Tabs/Newlines in Answer)
+    # If the extractor failed to remove newlines, the TSV structure breaks.
+    suspicious_chars = df["answer"].str.contains(r"[\n\t\r]", regex=True)
+    if suspicious_chars.any():
+        bad_ids = df.loc[suspicious_chars, "ID"].tolist()
+        raise ValueError(f"[SAQ FORMAT] Answers contain illegal newlines or tabs (corrupts TSV). IDs: {bad_ids[:5]}...")
+
+    # 4. Length Warning (Optional but recommended)
+    # SAQ answers should be short. If > 50 chars, the model might be ranting.
+    long_answers = df[df["answer"].str.len() > 50]
+    if not long_answers.empty:
+        print(f"⚠️  WARNING: {len(long_answers)} answers are longer than 50 characters. Check IDs: {long_answers['ID'].head(3).tolist()}")
+
+    # 5. Empty Answers Check (Strictness depends on your contest rules)
+    # If empty strings are allowed, you can remove this. 
+    # Current setting: Warn if empty.
+    empty_answers = df[df["answer"].str.strip() == ""]
+    if not empty_answers.empty:
+        print(f"⚠️  WARNING: {len(empty_answers)} answers are empty strings.")
+
+    print(f"✅ Validation Passed: {len(df)} rows loaded correctly.")
+    
 def validate_mcq_submission(path: str, expected_id_col="MCQID"):
     df = pd.read_csv(path, sep="\t", engine="python")
     expected_cols = [expected_id_col, "A", "B", "C", "D"]

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=mcq_zeroshot
+#SBATCH --job-name=mcq_zeroshot_prompt_tuned
 #SBATCH --partition=alpha
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
@@ -12,6 +12,6 @@
 source .venv/bin/activate
 
 # Run the python script with arguments
-python -m src.predict --task mcq --data_path data/test_dataset_mcq.csv --model_path meta-llama/Meta-Llama-3-8B --base_model meta-llama/Meta-Llama-3-8B --output_file submission/latest/submission_mcq.tsv
+python -m src.predict --task mcq --data_path data/test_dataset_mcq.csv --model_path meta-llama/Meta-Llama-3-8B --base_model meta-llama/Meta-Llama-3-8B --output_file submission/latest/submission_mcq_zs_1.tsv
 
 echo "Job finished! Check output/logs/ for results."

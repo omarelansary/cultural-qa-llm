@@ -76,17 +76,27 @@ def get_saq_question_text(row, mode="auto"):
 
 def format_prompt(row, task, saq_mode="auto"):
     """Creates the prompt based on the task (robust to your actual schemas)."""
+    
+    # Define your prefix here (easy to change later)
+    # Using "### User Question:" is stronger than just "User question:"
+    prefix = "### User Question:\n" 
+    
     if task == "mcq":
         # MCQ file has a preformatted 'prompt'
         if "prompt" not in row:
             raise KeyError(f"[MCQ] Missing 'prompt'. Available columns: {list(row.index)}")
-        return row["prompt"]
+        
+        # Add prefix to the pre-existing prompt
+        return f"{prefix}{row['prompt']}"
+
     elif task == "saq":
         # SAQ file has 'question' and 'en_question'
         q = get_saq_question_text(row, mode=saq_mode)
         if not q:
             raise KeyError(f"[SAQ] Missing usable question text. Available columns: {list(row.index)}")
-        return f"{q}\nAnswer:"
+        
+        # Add prefix before the question, keep "Answer:" at the end
+        return f"{prefix}{q}\n\nAnswer:"
 
     return ""
 
@@ -126,28 +136,64 @@ def decode_new_tokens(tokenizer, inputs, outputs):
     gen_ids = outputs[0][input_len:]
     return tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
 
-def extract_mcq_choice(text: str) -> str:
+def extract_mcq_choice(text: str):
     txt = (text or "").strip()
 
-    # Try parse JSON object anywhere in output
-    m = re.search(r"\{.*\}", txt, flags=re.DOTALL)
+    # 1. Primary Strategy: Extract JSON
+    # Changed to non-greedy '.*?' to capture only the first valid JSON block
+    m = re.search(r"\{.*?\}", txt, flags=re.DOTALL) 
     if m:
         try:
             obj = json.loads(m.group(0))
             if isinstance(obj, dict) and "answer_choice" in obj:
                 val = str(obj["answer_choice"]).strip().upper()
+                # Ensure we only grab the first letter (e.g., if model outputs "A (Apple)")
                 if val and val[0] in "ABCD":
                     return val[0]
         except Exception:
-            pass
+            pass # JSON failed, fall through to backup
 
-    # Fallback: first standalone A/B/C/D
+    # 2. Backup Strategy: Look for standalone letters
+    # This catches "The answer is A" or just "A"
     m = re.search(r"\b([ABCD])\b", txt.upper())
     if m:
         return m.group(1)
 
-    return "D"
+    # 3. Final Fail State:
+    # Option A: Return None (Best for debugging - lets you count how many failed)
+    return None
 
+def extract_saq_answer(text: str) -> str:
+    """
+    Robustly extracts SAQ answers from model output.
+    Handles 'Answer:' prefix, newlines, trailing periods, and 'or' separators.
+    """
+    if not isinstance(text, str):
+        return ""
+
+    # 1. Capture text after "Answer:" (Case Insensitive)
+    # If the model follows instructions: "Answer: Shaun White" -> "Shaun White"
+    match = re.search(r"answer\s*:\s*(.*)", text, re.IGNORECASE)
+    if match:
+        clean_text = match.group(1)
+    else:
+        # Fallback: If no "Answer:" prefix, take the raw output.
+        # CRITICAL CHANGE: Do NOT use .split()[0] here, or you lose "White" in "Shaun White".
+        clean_text = text
+
+    # 2. Post-Processing
+    # a. Take the first line only (removes reasoning traces if any leaked)
+    clean_text = clean_text.split('\n')[0].strip()
+
+    # b. Remove trailing period (common model habit: "12." -> "12")
+    if clean_text.endswith("."):
+        clean_text = clean_text[:-1]
+
+    # c. Handle "Option A or Option B" pattern (Keep first only)
+    # Splits on " or " or " / "
+    clean_text = re.split(r"\s+(?:or|/)\s+", clean_text, flags=re.IGNORECASE)[0]
+
+    return clean_text.strip()
 
 def main():
     setup_environment()
@@ -212,6 +258,8 @@ def main():
 
     # 3. Format & Save
     if args.task == "mcq":
+        # MCQ Logic
+        print("Extracting MCQ answers...")
         # Basic logic: Check which letter appears first in the answer
         final_preds = []
         for ans in predictions:
@@ -222,13 +270,26 @@ def main():
         validate_mcq_submission(args.output_file, expected_id_col="MCQID")
     
     else:
-        # SAQ logic, Allow empty answers, Save directly, and validate for submission format
-        predictions = [("" if p is None or (isinstance(p, float) and pd.isna(p)) else str(p)) for p in predictions]
-        out_df = pd.DataFrame({'ID': ids, 'answer': predictions})
+        # SAQ Logic
+        print("Extracting SAQ answers...")
+        
+        # Apply extraction to all raw predictions
+        # Handle potential None/NaN types before passing to extractor
+        clean_predictions = []
+        for p in predictions:
+            raw_str = "" if p is None or (isinstance(p, float) and pd.isna(p)) else str(p)
+            clean_predictions.append(extract_saq_answer(raw_str))
+
+        # Create DataFrame
+        out_df = pd.DataFrame({'ID': ids, 'answer': clean_predictions})
+        
+        # Save to TSV
+        # quoting=3 (QUOTE_NONE) is safer for strict TSV, but standard csv.QUOTE_MINIMAL is usually fine.
         out_df.to_csv(args.output_file, sep='\t', index=False, columns=["ID", "answer"], lineterminator="\n")
+        
+        # Validation
         validate_saq_submission(args.output_file)
         print(f"✅ SAQ Submission saved to {args.output_file}")
-
 
 if __name__ == "__main__":
     main()
