@@ -15,15 +15,13 @@ Your Goal: Provide the single best factual answer to the question.
 - Entities: If the answer is a person/place, provide the full name (e.g., "Shaun White", not "Shaun").
 - Lists: If multiple answers exist, provide only the SINGLE most popular one.
 
-### EXAMPLES
-User Question: What is the capital of France?
-Answer: Paris
+### EXAMPLES (Do not copy these)
 
-User Question: How many days are in a week?
-Answer: 7
+User: What is 2 + 2?
+Answer: 4
 
-User Question: Who is the most popular winter sports player in the US?
-Answer: Shaun White
+User: What color is a ripe banana?
+Answer: Yellow
 
-User Question: 在中国的婚礼上通常会提供什么饮品？
-Answer: Baijiu
+User: What is the chemical symbol for Oxygen?
+Answer: O

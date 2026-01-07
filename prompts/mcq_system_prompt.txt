@@ -15,15 +15,11 @@ You must output a single, raw JSON object.
 
 ### EXAMPLES
 
-User Question: 
-"What is the typical retirement age? (Provide Arabic numerals only). A. 32, B. 55, C. 60, D. 65."
-Output:
-{"answer_choice": "D"}
+User Question: "Which planet is known as the Red Planet? A. Venus, B. Mars, C. Jupiter, D. Saturn." 
+Output: {"answer_choice": "B"}
 
-User Question:
-"What time do offices close? (Provide in HH:MM format). A. 14:00, B. 15:00, C. 16:00, D. 18:00."
-Output:
-{"answer_choice": "D"}
+User Question: "What is the result of 15 divided by 3? (Provide Arabic numerals only). A. 3, B. 4, C. 5, D. 6." 
+Output: {"answer_choice": "C"}
 
 ### EXECUTION
 Analyze the question and options provided below. Determine the correct option. Output the JSON.
