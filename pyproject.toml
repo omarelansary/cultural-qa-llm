@@ -24,7 +24,8 @@ dependencies = [
     "torch>=2.1.0",
     "tqdm",
     "transformers>=4.40.0",
-    "wandb"
+    "wandb",
+    "datasets"
 ]
 
 [tool.setuptools.packages.find]
