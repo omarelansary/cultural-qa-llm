@@ -12,11 +12,12 @@ from .utils import setup_environment, save_mcq_submission, validate_saq_submissi
 def load_model_for_inference(model_path, base_model_name):
     """
     Smart loader:
-    - If model_path == base_model_name -> Loads Base Model (Zero-Shot)
-    - If model_path is a folder -> Loads Base Model + LoRA Adapter (Fine-Tuned)
+    - If model_path == base_model_name -> load base model (zero-shot).
+    - If model_path is a folder with adapter_config.json -> load base + LoRA adapter.
+    - Otherwise -> load model_path as a full model checkpoint (local dir or HF repo).
     """
-    print(f"🔄 Loading Base Model: {base_model_name}...")
-    
+    print(f"Loading base model: {base_model_name}...")
+
     # 1. Load Base Model (Quantized for memory)
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
@@ -24,24 +25,39 @@ def load_model_for_inference(model_path, base_model_name):
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16
     )
-    
+
+    is_local_dir = Path(model_path).exists()
+    is_lora = is_local_dir and (Path(model_path) / "adapter_config.json").exists()
+
     tokenizer = AutoTokenizer.from_pretrained(base_model_name)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
+
+    if model_path == base_model_name:
+        print("Using pure base model (zero-shot).")
+        model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            quantization_config=bnb_config,
+            device_map="auto"
+        )
+        return model, tokenizer
+
+    if is_lora:
+        print(f"Loading LoRA adapters from: {model_path}")
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            quantization_config=bnb_config,
+            device_map="auto"
+        )
+        model = PeftModel.from_pretrained(base_model, model_path)
+        return model, tokenizer
     
-    base_model = AutoModelForCausalLM.from_pretrained(
-        base_model_name,
+    print(f"Loading full model checkpoint from: {model_path}")
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
         quantization_config=bnb_config,
         device_map="auto"
     )
-
-    # 2. Check if we need to load LoRA adapters
-    if model_path != base_model_name:
-        print(f"🔧 Loading LoRA Adapters from: {model_path}")
-        model = PeftModel.from_pretrained(base_model, model_path)
-    else:
-        print("🚀 Using Pure Base Model (Zero-Shot Mode)")
-        model = base_model
 
     return model, tokenizer
 

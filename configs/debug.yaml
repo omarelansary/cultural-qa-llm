@@ -1,16 +1,18 @@
 # Use a tiny model just to check if code works
-model_name: "TinyLlama/TinyLlama-1.1B-Chat-v1.0" 
+task: "mcq"
+model_name: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 quantization: "4bit"
 
 data_path: "data/train_dataset_mcq.csv"
 output_dir: "output/debug_run"
+max_length: 256
+report_to: "none"
 
-# Super fast training settings
 train_args:
   per_device_train_batch_size: 1
   gradient_accumulation_steps: 1
   warmup_steps: 0
-  max_steps: 2  # Run only 2 steps then stop!
+  max_steps: 2
   learning_rate: 2.0e-4
   logging_steps: 1
-  save_strategy: "no" # Don't save checkpoints for debug
+  save_strategy: "no"

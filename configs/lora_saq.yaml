@@ -1,0 +1,23 @@
+# LoRA fine-tuning for SAQ
+task: "saq"
+model_name: "meta-llama/Meta-Llama-3-8B"
+quantization: "4bit"
+
+data_path: "data/train_dataset_saq.csv"
+output_dir: "output/saq_lora"
+max_length: 512
+
+lora:
+  enabled: true
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+train_args:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 4
+  num_train_epochs: 3
+  learning_rate: 2.0e-4
+  logging_steps: 10
+  save_steps: 100
