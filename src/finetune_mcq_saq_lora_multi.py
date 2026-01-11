@@ -501,7 +501,7 @@ def main():
     # -------------------------
     training_args = TrainingArguments(
         output_dir=args.output_dir,
-        overwrite_output_dir=True,
+        overwrite_output_dir=False,
         num_train_epochs=args.num_train_epochs,
         per_device_train_batch_size=args.per_device_train_batch_size,
         per_device_eval_batch_size=args.per_device_eval_batch_size,
@@ -514,7 +514,8 @@ def main():
         eval_steps=args.eval_steps,
         eval_strategy="steps",
         save_total_limit=args.save_total_limit,
-        report_to="none",
+        report_to="wandb",
+        run_name=f"{args.task}_{os.path.basename(args.output_dir.rstrip('/'))}",
         bf16=torch.cuda.is_available(),
         fp16=False,
         dataloader_drop_last=False,
