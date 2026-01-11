@@ -97,7 +97,11 @@ else
     --data_path data/test_dataset_mcq.csv \
     --model_path "${FT_FINAL_OUT_DIR}" \
     --base_model "${MODEL_NAME}" \
+    --self_consistency_k 7 \
+    --self_consistency_temp 0.7 \
+    --self_consistency_top_p 0.9 \
     --output_file "${MCQ_OUT}"
+
 fi
 
 echo "===== Finished STAGE 2: MCQ PREDICTION ====="

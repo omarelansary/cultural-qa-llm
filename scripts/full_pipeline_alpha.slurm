@@ -20,6 +20,20 @@ cd /home/huch135g/cultural-qa-llm
 # Activate your environment.
 source .venv/bin/activate
 
+set -a
+source .env
+set +a
+
+# Set caches to a persistent location to avoid re-downloading.
+export HUGGINGFACE_HUB_TOKEN="$HF_TOKEN"
+export HF_HOME=/home/huch135g/cultural-qa-llm/.hf_cache
+export HF_HUB_CACHE=$HF_HOME/hub
+export HF_DATASETS_CACHE=$HF_HOME/datasets
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+mkdir -p "$HF_HUB_CACHE" "$HF_DATASETS_CACHE"
+
+python -c "import os; print('HF_TOKEN set:', bool(os.getenv('HF_TOKEN') or os.getenv('HUGGINGFACE_HUB_TOKEN')))"
+
 RUN_TAG="parallel_lr1e-4_bs8_ep2"
 MODEL_NAME="meta-llama/Meta-Llama-3-8B"
 OUT_DIR="output/lora/${RUN_TAG}/"
