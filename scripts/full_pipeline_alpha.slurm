@@ -1,7 +1,7 @@
 #!/bin/bash
 # Slurm submission script to fine-tune, predict, and build a Codabench submission.
 
-#SBATCH --job-name=full_pipeline_lr1e-4_bs8_ep2
+#SBATCH --job-name=full_pipeline_parallel_lr1e-4_bs8_ep2
 #SBATCH --partition=alpha
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
@@ -20,17 +20,18 @@ cd /home/huch135g/cultural-qa-llm
 # Activate your environment.
 source .venv/bin/activate
 
-RUN_TAG="run_lr1e-4_bs8_ep2"
+RUN_TAG="parallel_lr1e-4_bs8_ep2"
 MODEL_NAME="meta-llama/Meta-Llama-3-8B"
 OUT_DIR="output/lora/${RUN_TAG}/"
 MCQ_OUT="submission/latest/submission_mcq_${RUN_TAG}.tsv"
 SAQ_OUT="submission/latest/submission_saq_${RUN_TAG}.tsv"
 
-python src/finetune_mcq_saq_lora.py \
+python src/finetune_mcq_saq_lora_multi.py \
   --mcq_csv data/train_dataset_mcq.csv \
   --saq_csv data/train_dataset_saq.csv \
   --output_dir "${OUT_DIR}" \
   --model_name "${MODEL_NAME}" \
+  --task both \
   --test_size 0.05 \
   --max_length 512 \
   --num_train_epochs 2 \
