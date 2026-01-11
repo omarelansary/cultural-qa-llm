@@ -225,3 +225,8 @@ submissions/
 # Outputs (models, logs, predictions)
 output/*
 !output/.gitkeep
+
+# Hugging Face cache (models, datasets, tokenizer files)
+.hf_cache/
+.cache/huggingface/
+**/.cache/huggingface/
