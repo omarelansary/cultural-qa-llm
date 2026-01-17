@@ -117,41 +117,87 @@ def _norm_text(s: str) -> str:
     return re.sub(r"\s+", " ", str(s).strip())
 
 
-def pick_saq_canonical_from_annotations(annotations_str: str) -> str:
+def pick_saq_en_answer(annotations) -> str:
     """
-    annotations_str looks like:
-      "[{'answers': [...], 'en_answers': [...], 'count': 4}, ...]"
+    annotations can be either:
+      - a dict: {'en_answer': 'football'}
+      - a string representation of that dict
+    Returns exactly the value of 'en_answer', or "" if absent.
+    """
+    if isinstance(annotations, str):
+        annotations = ast.literal_eval(annotations)
 
-    Canonical choice:
-      - pick max count
-      - deterministic tie-break: choose lexicographically smallest candidate text
-      - prefer en_answers over answers
-    """
-    anns = ast.literal_eval(annotations_str) if isinstance(annotations_str, str) else annotations_str
-    if not anns:
+    if not isinstance(annotations, dict):
         return ""
 
-    # Build candidate texts per entry (prefer English)
-    candidates: List[Tuple[int, str]] = []
-    for d in anns:
-        c = int(d.get("count", 0))
-        en = d.get("en_answers") or []
-        orig = d.get("answers") or []
-        chosen_list = en if (isinstance(en, list) and len(en) > 0 and en[0]) else orig
-        if isinstance(chosen_list, list) and chosen_list:
-            txt = _norm_text(chosen_list[0])
-            if txt:
-                candidates.append((c, txt))
+    return str(annotations.get("en_answer", "")).strip()
 
-    if not candidates:
-        return ""
 
-    max_c = max(c for c, _ in candidates)
-    tied = [txt for c, txt in candidates if c == max_c]
+# def pick_saq_canonical_from_annotations(annotations_str: str) -> str:
+#     """
+#     annotations_str looks like:
+#       "[{'answers': [...], 'en_answers': [...], 'count': 4}, ...]"
 
-    # Deterministic tie-break:
-    return sorted(tied)[0]
+#     Canonical choice:
+#       - pick max count
+#       - deterministic tie-break: choose lexicographically smallest candidate text
+#       - prefer en_answers over answers
+#     """
+#     anns = ast.literal_eval(annotations_str) if isinstance(annotations_str, str) else annotations_str
+#     if not anns:
+#         return ""
 
+#     # Build candidate texts per entry (prefer English)
+#     candidates: List[Tuple[int, str]] = []
+#     for d in anns:
+#         c = int(d.get("count", 0))
+#         en = d.get("en_answers") or []
+#         orig = d.get("answers") or []
+#         chosen_list = en if (isinstance(en, list) and len(en) > 0 and en[0]) else orig
+#         if isinstance(chosen_list, list) and chosen_list:
+#             txt = _norm_text(chosen_list[0])
+#             if txt:
+#                 candidates.append((c, txt))
+
+#     if not candidates:
+#         return ""
+
+#     max_c = max(c for c, _ in candidates)
+#     tied = [txt for c, txt in candidates if c == max_c]
+
+#     # Deterministic tie-break:
+#     return sorted(tied)[0]
+
+
+# def _norm_text(s: Any) -> str:
+#     if s is None:
+#         return ""
+#     s = str(s).strip()
+#     return " ".join(s.split())
+
+# def pick_saq_canonical_from_annotations(annotations: Any) -> str:
+#     """
+#     annotations example:
+#       {'en_answer': 'football'}
+#       or "{'en_answer': 'football'}"
+
+#     Behavior:
+#       - return normalized annotations['en_answer']
+#       - return empty string if missing or invalid
+#     """
+#     if not annotations:
+#         return ""
+
+#     if isinstance(annotations, str):
+#         try:
+#             annotations = ast.literal_eval(annotations)
+#         except (ValueError, SyntaxError):
+#             return ""
+
+#     if not isinstance(annotations, Mapping):
+#         return ""
+
+#     return _norm_text(annotations.get("en_answer", ""))
 
 # -------------------------
 # Prompt building
@@ -169,7 +215,7 @@ def build_mcq_prompt(country: str, raw_prompt: str) -> str:
 
     return (
         "### Instruction:\n"
-        "Answer the multiple-choice question by selecting the correct option letter.\n\n"
+        "Return ONLY a JSON object like {\"answer_choice\": \"B\"} with the chosen option letter.\n\n"
         f"### Context:\nCountry: {country}\n\n"
         "### Question:\n"
         f"{raw_prompt}\n\n"
@@ -374,7 +420,7 @@ def main():
             if q_en is None or str(q_en).strip() == "":
                 q_en = r.get("question", "")
 
-            canonical = pick_saq_canonical_from_annotations(r.get("annotations", "[]"))
+            canonical = pick_saq_en_answer(r.get("annotations", "[]"))
             if not canonical:
                 continue  # important: skip empties
 
